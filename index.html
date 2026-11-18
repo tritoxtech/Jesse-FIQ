@@ -210,7 +210,7 @@ function analyze(raw,filename){
  const values=(b,pattern)=>pattern.exec(b.details.join('\n'))||pattern.exec(b.summary.join('\n'));
  const discountData=b=>{
   if(!b)return null;
-  for(const [list,rx] of [[b.details,/^Discounts\s*\/\s*Preferences\b/im],[b.summary,/^Applied discounts\s*$/im]]){
+  for(const [list,rx] of [[b.summary,/^Applied discounts\b[ \t]*:?/im],[b.details,/^Discounts\s*\/\s*Preferences\b/im]]){
    for(const p of list){const m=rx.exec(p);if(!m)continue;
     const body=p.slice(m.index+m[0].length).split(/(?:^Payment plans?\b|^Page \d+\b|^Quote #\b|^\*|^Prepared on\b)/im)[0].trim();
     if(body)return body;
@@ -262,9 +262,9 @@ function analyze(raw,filename){
   const d=autoDiscounts;
   for(const [label,pattern] of [
    ['Paperless',/\b(?:Go\s+)?Paperless\b/i],
-   ...(/\bAuto\s*\/\s*(?:(?:Farmers\s+)?Home|Condo)\b/i.test(d||'') ? [['Homeowner',/\bHome\s*owner\b/i]] : []),
-   bw?['Auto/Other or Auto/Farmers Home',/\bAuto\s*\/\s*(?:Other|Farmers\s+Home)\b/i]
-     :['Auto/Home or Condo or Auto/Renters',/\bAuto\s*\/\s*(?:(?:Farmers\s+)?Home|Renters)\b/i],
+   ...(/\b(?:Farmers\s+Home|Home\s+or\s+Condo|Auto\s*\/\s*(?:(?:Farmers\s+)?Home|Condo))\b/i.test(d||'') ? [['Homeowner',/\bHome\s*owner\b/i]] : []),
+   bw?['Farmers Home',/\bFarmers\s+Home\b/i]
+     :[/\b(?:Auto\s*\/\s*)?Renters\b/i.test(d||'')&&!/\bHome\s+or\s+Condo\b/i.test(d||'')?'Renters':'Home or Condo',/\b(?:Home\s+or\s+Condo|Renters|Auto\s*\/\s*(?:(?:Farmers\s+)?Home|Condo|Renters))\b/i],
    ['Early Shopper',/\bEarly\s+Shopper\b/i],
    ['Signal by Farmers',/\bSignal(?:\s+by\s+Farmers)?\b/i]
   ]){
